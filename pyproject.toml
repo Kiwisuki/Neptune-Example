@@ -12,6 +12,8 @@ authors = ['Marius Arlauskas']
 python = '~3.11'
 
 [tool.poetry.group.dev.dependencies]
+ucimlrepo = "^0.0.2"
+pandas = "^2.1.1"
 
 [tool.poetry.group.linting.dependencies]
 ruff = '^0.0.285'
