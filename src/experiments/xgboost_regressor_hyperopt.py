@@ -90,7 +90,7 @@ def xgboost_regressor_hyperopt_experiment():
 
     logging.info('Cross-validating model')
     data[f'predicted_{TARGET}'] = (
-        cross_val_predict(model, X, y, cv=N_FOLDS).round(0).astype(int)
+        cross_val_predict(model, X, y, cv=N_FOLDS).round(0).astype(int),
     )
 
     logging.info('Visualizing error analysis')

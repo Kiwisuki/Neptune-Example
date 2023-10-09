@@ -3,6 +3,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from xgboost import plot_importance
+from xgboost import XGBRegressor
 
 
 def scatter_residual_analysis(data: pd.DataFrame) -> go.Figure:
@@ -38,7 +39,7 @@ def scatter_residual_analysis(data: pd.DataFrame) -> go.Figure:
     return fig
 
 
-def plot_feature_importance(model: object) -> plt.Figure:
+def plot_feature_importance(model: XGBRegressor) -> plt.Figure:
     """Plots feature importance for a given (xgb)model."""
     fig, ax = plt.subplots(figsize=(15, 15))
     plot_importance(model, ax=ax)
