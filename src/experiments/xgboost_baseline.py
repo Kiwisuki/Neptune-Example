@@ -7,7 +7,6 @@ from sklearn.model_selection import cross_val_predict
 from xgboost import XGBRegressor
 
 from config.constants import (
-    MODELS_PATH,
     N_FOLDS,
     NEPTUNE_API_TOKEN,
     NEPTUNE_PROJECT_NAME,
