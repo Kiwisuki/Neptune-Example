@@ -2,7 +2,12 @@ import logging
 
 import neptune
 from neptune.types import File
-from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+from sklearn.metrics import (
+    accuracy_score,
+    mean_absolute_error,
+    mean_squared_error,
+    r2_score,
+)
 from sklearn.model_selection import cross_val_predict
 from xgboost import XGBRegressor
 
@@ -10,6 +15,7 @@ from config.constants import (
     N_FOLDS,
     NEPTUNE_API_TOKEN,
     NEPTUNE_PROJECT_NAME,
+    OPTIMIZATION_PARAMETERS,
     RANDOM_STATE,
     TARGET,
 )
@@ -58,10 +64,12 @@ def xgboost_baseline_experiment():
     )
     run['mae'] = mean_absolute_error(data[TARGET], data[f'predicted_{TARGET}'])
     run['r2'] = r2_score(data[TARGET], data[f'predicted_{TARGET}'])
+    run['accuracy'] = accuracy_score(data[TARGET], data[f'predicted_{TARGET}'])
     run['visuals/error_analysis'].upload(residual_analysis_fig)
     run['visuals/feature_importance'].upload(feature_importance_fig)
     run['artifacts/model'].upload(File.as_pickle(model))
     run['code/experiment_code'] = File('src/experiments/xgboost_baseline.py')
+    run['hyperparameters'] = {k: 'Default' for k in OPTIMIZATION_PARAMETERS}
 
     run.stop()
     logging.info('Finished experiment')

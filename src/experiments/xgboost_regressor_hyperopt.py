@@ -1,13 +1,17 @@
 import logging
 
 import neptune
-from neptune.types import File
-from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score, accuracy_score
-from sklearn.model_selection import cross_val_predict
-from sklearn.model_selection import train_test_split
-from xgboost import XGBRegressor
-from hyperopt import fmin, tpe, hp
 import numpy as np
+from hyperopt import fmin, hp, tpe
+from neptune.types import File
+from sklearn.metrics import (
+    accuracy_score,
+    mean_absolute_error,
+    mean_squared_error,
+    r2_score,
+)
+from sklearn.model_selection import cross_val_predict, train_test_split
+from xgboost import XGBRegressor
 
 from config.constants import (
     N_FOLDS,
@@ -18,8 +22,6 @@ from config.constants import (
 )
 from src.data_export import get_data
 from src.plotting_utils import plot_feature_importance, scatter_residual_analysis
-
-
 
 
 def xgboost_regressor_hyperopt_experiment():
@@ -37,15 +39,33 @@ def xgboost_regressor_hyperopt_experiment():
 
     # Hyperopt setup
     space = {
-        'n_estimators': hp.choice('n_estimators', np.arange(50, 501, 50, dtype=int)),  # Choose from 50 to 500 in steps of 50
-        'max_depth': hp.choice('max_depth', np.arange(1, 21, dtype=int)),  # Choose from 1 to 20
-        'learning_rate': hp.loguniform('learning_rate', np.log(0.001), np.log(0.5)),  # Learning rate
-        'subsample': hp.uniform('subsample', 0.6, 1.0),  # Fraction of samples used for fitting the trees
-        'colsample_bytree': hp.uniform('colsample_bytree', 0.6, 1.0),  # Fraction of features used for building each tree
-        'min_child_weight': hp.quniform('min_child_weight', 1, 10, 1),  # Minimum sum of instance weight needed in a child
-        'gamma': hp.uniform('gamma', 0, 1),  # Minimum loss reduction required to make a further partition on a leaf node
-        'reg_alpha': hp.loguniform('reg_alpha', -6, 2),  # L1 regularization term on weights
-        'reg_lambda': hp.loguniform('reg_lambda', -6, 2),  # L2 regularization term on weights
+        'n_estimators': hp.choice(
+            'n_estimators', np.arange(50, 501, 50, dtype=int)
+        ),  # Choose from 50 to 500 in steps of 50
+        'max_depth': hp.choice(
+            'max_depth', np.arange(1, 21, dtype=int)
+        ),  # Choose from 1 to 20
+        'learning_rate': hp.loguniform(
+            'learning_rate', np.log(0.001), np.log(0.5)
+        ),  # Learning rate
+        'subsample': hp.uniform(
+            'subsample', 0.6, 1.0
+        ),  # Fraction of samples used for fitting the trees
+        'colsample_bytree': hp.uniform(
+            'colsample_bytree', 0.6, 1.0
+        ),  # Fraction of features used for building each tree
+        'min_child_weight': hp.quniform(
+            'min_child_weight', 1, 10, 1
+        ),  # Minimum sum of instance weight needed in a child
+        'gamma': hp.uniform(
+            'gamma', 0, 1
+        ),  # Minimum loss reduction required to make a further partition on a leaf node
+        'reg_alpha': hp.loguniform(
+            'reg_alpha', -6, 2
+        ),  # L1 regularization term on weights
+        'reg_lambda': hp.loguniform(
+            'reg_lambda', -6, 2
+        ),  # L2 regularization term on weights
     }
 
     # ? Defining function within fuction feels not right, would like to discuss with the team.
@@ -58,14 +78,13 @@ def xgboost_regressor_hyperopt_experiment():
         predictions = model.predict(X_test)
         mse = mean_squared_error(y_test, predictions)
         return mse
-    
+
     best_params = fmin(
         fn=objective,
         space=space,
         algo=tpe.suggest,
         max_evals=100,
     )
-
 
     model = XGBRegressor(**best_params)
 
@@ -100,4 +119,3 @@ def xgboost_regressor_hyperopt_experiment():
 
     run.stop()
     logging.info('Finished experiment')
-
