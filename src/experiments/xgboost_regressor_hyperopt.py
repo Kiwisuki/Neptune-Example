@@ -76,6 +76,7 @@ def xgboost_regressor_hyperopt_experiment():
 
     # ? Defining function within fuction feels not right, would like to discuss with the team.
     def objective(params: dict) -> float:
+        """Objective function for hyperopt to minimize."""
         model = XGBRegressor(**params, random_state=RANDOM_STATE)
         X_train, X_test, y_train, y_test = train_test_split(
             X, y, test_size=0.2, random_state=RANDOM_STATE

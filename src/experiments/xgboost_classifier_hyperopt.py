@@ -81,6 +81,7 @@ def xgboost_classifier_hyperopt_experiment():
 
     # ? Defining function within fuction feels not right, would like to discuss with the team.
     def objective(params: dict) -> float:
+        """Objective function for hyperopt to minimize."""
         model = XGBClassifier(**params, random_state=RANDOM_STATE)
         X_train, X_test, y_train, y_test = train_test_split(
             X, y, test_size=0.2, random_state=RANDOM_STATE
@@ -88,7 +89,7 @@ def xgboost_classifier_hyperopt_experiment():
         model.fit(X_train, y_train)
         y_pred = model.predict(X_test)
         accuracy = accuracy_score(y_test, y_pred)
-        return accuracy
+        return -accuracy
 
     best_params = fmin(
         fn=objective,

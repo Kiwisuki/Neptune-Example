@@ -18,7 +18,6 @@ from config.constants import (
     N_FOLDS,
     NEPTUNE_API_TOKEN,
     NEPTUNE_PROJECT_NAME,
-    OPTIMIZATION_PARAMETERS,
     RANDOM_STATE,
     TARGET,
 )
