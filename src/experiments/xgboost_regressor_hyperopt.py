@@ -14,6 +14,7 @@ from sklearn.model_selection import cross_val_predict, train_test_split
 from xgboost import XGBRegressor
 
 from config.constants import (
+    MAX_EVALS,
     N_FOLDS,
     NEPTUNE_API_TOKEN,
     NEPTUNE_PROJECT_NAME,
@@ -83,7 +84,7 @@ def xgboost_regressor_hyperopt_experiment():
         fn=objective,
         space=space,
         algo=tpe.suggest,
-        max_evals=100,
+        max_evals=MAX_EVALS,
     )
 
     model = XGBRegressor(**best_params)
@@ -116,6 +117,9 @@ def xgboost_regressor_hyperopt_experiment():
     run['visuals/feature_importance'].upload(feature_importance_fig)
     run['artifacts/model'].upload(File.as_pickle(model))
     run['code/experiment_code'] = File('src/experiments/xgboost_baseline.py')
+    run['notes'] = 'XgbRegressor with hyperopt parameters'
+    run['hyperopt/max_evals'] = MAX_EVALS
+    run['hyperopt/space'] = space
 
     run.stop()
     logging.info('Finished experiment')

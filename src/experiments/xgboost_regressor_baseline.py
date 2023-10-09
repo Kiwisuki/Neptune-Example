@@ -23,7 +23,7 @@ from src.data_export import get_data
 from src.plotting_utils import plot_feature_importance, scatter_residual_analysis
 
 
-def xgboost_baseline_experiment():
+def xgboost_regressor_baseline_experiment():
     """Runs a baseline experiment with default parameters for XGBoost regressor."""
     data = get_data()
     X, y = data.drop(TARGET, axis=1), data[TARGET]
@@ -70,6 +70,9 @@ def xgboost_baseline_experiment():
     run['artifacts/model'].upload(File.as_pickle(model))
     run['code/experiment_code'] = File('src/experiments/xgboost_baseline.py')
     run['hyperparameters'] = {k: 'Default' for k in OPTIMIZATION_PARAMETERS}
+    run['notes'] = 'XgbRegressor with default parameters'
+    run['hyperopt/max_evals'] = 'N/A'
+    run['hyperopt/space'] = 'N/A'
 
     run.stop()
     logging.info('Finished experiment')
