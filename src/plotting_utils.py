@@ -2,8 +2,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-from xgboost import plot_importance
-from xgboost import XGBRegressor
+from xgboost import XGBRegressor, plot_importance
 
 
 def scatter_residual_analysis(data: pd.DataFrame) -> go.Figure:
