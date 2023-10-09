@@ -40,7 +40,7 @@ def xgboost_regressor_hyperopt_experiment():
         api_token=NEPTUNE_API_TOKEN,
         name='xgboost-regressor-hyperopt' + str(MAX_EVALS) + '-evals',
         tags=['xgboost', 'regressor', 'hyperopt-params'],
-        custom_run_id='XGB-REG-HYPEROPT',
+        custom_run_id='XGB-REG-HYPEROPT' + str(MAX_EVALS) + '-EVALS',
     )
 
     # Hyperopt setup

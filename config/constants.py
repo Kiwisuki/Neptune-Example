@@ -13,7 +13,7 @@ NEPTUNE_API_TOKEN = os.environ.get('NEPTUNE_API_TOKEN')
 RANDOM_STATE = 42
 N_FOLDS = 5
 MODELS_PATH = Path('models')
-MAX_EVALS = 30
+MAX_EVALS = 1000
 
 OPTIMIZATION_PARAMETERS = [
     'n_estimators',

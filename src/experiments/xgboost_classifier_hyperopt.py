@@ -45,7 +45,7 @@ def xgboost_classifier_hyperopt_experiment():
         api_token=NEPTUNE_API_TOKEN,
         name='xgboost-classifier-hyperopt-' + str(MAX_EVALS) + '-evals',
         tags=['xgboost', 'classifier', 'hyperopt-params'],
-        custom_run_id='XGB-CLF-HYPEROPT',
+        custom_run_id='XGB-CLF-HYPEROPT' + str(MAX_EVALS) + '-EVALS',
     )
 
     # Hyperopt setup
