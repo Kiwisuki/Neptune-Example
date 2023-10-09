@@ -12,8 +12,13 @@ authors = ['Marius Arlauskas']
 python = '~3.11'
 
 [tool.poetry.group.dev.dependencies]
-ucimlrepo = "^0.0.2"
 pandas = "^2.1.1"
+hyperopt = "^0.2.7"
+xgboost = "^2.0.0"
+catboost = "^1.2.2"
+seaborn = "^0.13.0"
+plotly = "^5.17.0"
+neptune = "^1.8.1"
 
 [tool.poetry.group.linting.dependencies]
 ruff = '^0.0.285'
