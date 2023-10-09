@@ -13,9 +13,10 @@ from sklearn.metrics import (
     r2_score,
 )
 from sklearn.model_selection import cross_val_predict, train_test_split
-from xgboost import XGBRegressor
+from xgboost import XGBClassifier
 
 from config.constants import (
+    CLASSIFIER_REMAP_CONSTANT,
     MAX_EVALS,
     N_FOLDS,
     NEPTUNE_API_TOKEN,
@@ -29,18 +30,22 @@ from src.plotting_utils import plot_feature_importance, scatter_residual_analysi
 SCRIPT_PATH = str(Path(os.path.realpath(__file__)))
 
 
-def xgboost_regressor_hyperopt_experiment():
-    """Runs a baseline experiment with hyperopt parameters for XGBoost regressor."""
+def xgboost_classifier_hyperopt_experiment():
+    """Runs a experiment with hyperopt parameters for XGBoost regressor."""
     data = get_data()
+
+    # Remap target to be compatible with classifier
+    data[TARGET] = data[TARGET] - CLASSIFIER_REMAP_CONSTANT
+
     X, y = data.drop(TARGET, axis=1), data[TARGET]
 
     logging.info('Initializing Neptune')
     run = neptune.init_run(
         project=NEPTUNE_PROJECT_NAME,
         api_token=NEPTUNE_API_TOKEN,
-        name='xgboost-regressor-hyperopt' + str(MAX_EVALS) + '-evals',
-        tags=['xgboost', 'regressor', 'hyperopt-params'],
-        custom_run_id='XGB-REG-HYPEROPT',
+        name='xgboost-classifier-hyperopt-' + str(MAX_EVALS) + '-evals',
+        tags=['xgboost', 'classifier', 'hyperopt-params'],
+        custom_run_id='XGB-CLF-HYPEROPT',
     )
 
     # Hyperopt setup
@@ -76,14 +81,14 @@ def xgboost_regressor_hyperopt_experiment():
 
     # ? Defining function within fuction feels not right, would like to discuss with the team.
     def objective(params: dict) -> float:
-        model = XGBRegressor(**params, random_state=RANDOM_STATE)
+        model = XGBClassifier(**params, random_state=RANDOM_STATE)
         X_train, X_test, y_train, y_test = train_test_split(
             X, y, test_size=0.2, random_state=RANDOM_STATE
         )
         model.fit(X_train, y_train)
-        predictions = model.predict(X_test)
-        mse = mean_squared_error(y_test, predictions)
-        return mse
+        y_pred = model.predict(X_test)
+        accuracy = accuracy_score(y_test, y_pred)
+        return accuracy
 
     best_params = fmin(
         fn=objective,
@@ -92,7 +97,7 @@ def xgboost_regressor_hyperopt_experiment():
         max_evals=MAX_EVALS,
     )
 
-    model = XGBRegressor(**best_params)
+    model = XGBClassifier(**best_params)
 
     logging.info('Cross-validating model')
     data[f'predicted_{TARGET}'] = (
@@ -122,7 +127,7 @@ def xgboost_regressor_hyperopt_experiment():
     run['visuals/feature_importance'].upload(feature_importance_fig)
     run['artifacts/model'].upload(File.as_pickle(model))
     run['code/experiment_code'] = File(SCRIPT_PATH)
-    run['misc/notes'] = 'XGBoost regressor hyperopt experiment'
+    run['misc/notes'] = 'XGBoost classifier hyperopt experiment'
     run['hyperopt/max_evals'] = MAX_EVALS
     run['hyperopt/space'] = space
 

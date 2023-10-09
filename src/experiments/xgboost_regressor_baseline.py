@@ -1,4 +1,6 @@
 import logging
+import os
+from pathlib import Path
 
 import neptune
 from neptune.types import File
@@ -22,6 +24,8 @@ from config.constants import (
 from src.data_export import get_data
 from src.plotting_utils import plot_feature_importance, scatter_residual_analysis
 
+SCRIPT_PATH = str(Path(os.path.realpath(__file__)))
+
 
 def xgboost_regressor_baseline_experiment():
     """Runs a baseline experiment with default parameters for XGBoost regressor."""
@@ -32,8 +36,9 @@ def xgboost_regressor_baseline_experiment():
     run = neptune.init_run(
         project=NEPTUNE_PROJECT_NAME,
         api_token=NEPTUNE_API_TOKEN,
-        name='xgboost-baseline',
-        tags=['xgboost', 'baseline', 'default-params'],
+        name='xgboost-regressor-baseline',
+        tags=['xgboost', 'regressor', 'default-params'],
+        custom_run_id='XGB-REG-BASELINE',
     )
 
     model_params = {
@@ -57,22 +62,21 @@ def xgboost_regressor_baseline_experiment():
     feature_importance_fig = plot_feature_importance(model)
 
     logging.info('Logging metrics and artifacts')
-    run['rmse'] = mean_squared_error(
+    run['hyperparameters'] = model_params
+    run['metrics/rmse'] = mean_squared_error(
         data[TARGET],
         data[f'predicted_{TARGET}'],
         squared=False,
     )
-    run['mae'] = mean_absolute_error(data[TARGET], data[f'predicted_{TARGET}'])
-    run['r2'] = r2_score(data[TARGET], data[f'predicted_{TARGET}'])
-    run['accuracy'] = accuracy_score(data[TARGET], data[f'predicted_{TARGET}'])
+    run['metrics/mae'] = mean_absolute_error(data[TARGET], data[f'predicted_{TARGET}'])
+    run['metrics/r2'] = r2_score(data[TARGET], data[f'predicted_{TARGET}'])
+    run['metrics/accuracy'] = accuracy_score(data[TARGET], data[f'predicted_{TARGET}'])
     run['visuals/error_analysis'].upload(residual_analysis_fig)
     run['visuals/feature_importance'].upload(feature_importance_fig)
     run['artifacts/model'].upload(File.as_pickle(model))
-    run['code/experiment_code'] = File('src/experiments/xgboost_baseline.py')
-    run['hyperparameters'] = {k: 'Default' for k in OPTIMIZATION_PARAMETERS}
-    run['notes'] = 'XgbRegressor with default parameters'
-    run['hyperopt/max_evals'] = 'N/A'
-    run['hyperopt/space'] = 'N/A'
+    run['code/experiment_code'] = File(SCRIPT_PATH)
+    run['misc/notes'] = 'XGBoost regressor baseline experiment'
+    run['hyperopt/max_evals'] = 0
 
     run.stop()
     logging.info('Finished experiment')
