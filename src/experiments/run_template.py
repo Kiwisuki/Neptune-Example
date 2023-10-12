@@ -3,10 +3,11 @@ import os
 from pathlib import Path
 from typing import Callable, List, Optional
 
-import neptune
 import pandas as pd
 from hyperopt import fmin, tpe
+from neptune import Run
 from neptune.types import File
+from neptune.utils import stringify_unsupported
 from sklearn.base import BaseEstimator
 from sklearn.metrics import (
     accuracy_score,
@@ -56,7 +57,7 @@ def run_experiment(
     if space and params:
         raise ValueError('You cannot provide both space and params.')
 
-    run = neptune.init_run(
+    run = Run(
         project=NEPTUNE_PROJECT_NAME,
         api_token=NEPTUNE_API_TOKEN,
         name=experiment_name,
@@ -105,7 +106,7 @@ def run_experiment(
     # Hyperopt
     if space:
         run['hyperopt/max_evals'] = max_evals
-        run['hyperopt/space'] = space
+        run['hyperopt/space'] = stringify_unsupported(space)
 
     # Performance metrics
     log_performance(run, 'train', y_train_pred, y_train)
