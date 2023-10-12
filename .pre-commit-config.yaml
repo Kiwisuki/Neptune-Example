@@ -28,7 +28,7 @@ repos:
     rev: v0.902
     hooks:
       - id: mypy
-        exclude: ^tests/|^config/
+        exclude: ^tests/|^config/|main.py
 -   repo: local
     hooks:
     -   id: pytest

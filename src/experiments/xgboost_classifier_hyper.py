@@ -1,4 +1,6 @@
 """ Experiment configuration for XGBoost classifier hyperparameter tuning. """
+import os
+from pathlib import Path
 from typing import Dict, Type
 
 import numpy as np
@@ -7,6 +9,8 @@ from neptune import Run
 from sklearn.base import BaseEstimator
 from sklearn.metrics import accuracy_score
 from xgboost import XGBClassifier
+
+SCRIPT_PATH = str(Path.resolve(Path(__file__)))
 
 EXPERIMENT_NAME = 'xgboost-classifier-hyperopt'
 MAX_EVALS = 50
@@ -53,4 +57,5 @@ EXPERIMENT_CONFIG = {
     'max_evals': MAX_EVALS,
     'model_class': MODEL_CLASS,
     'tags': TAGS,
+    'config_path': SCRIPT_PATH,
 }

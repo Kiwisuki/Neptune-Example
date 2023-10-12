@@ -1,11 +1,13 @@
 import logging
 import os
 from pathlib import Path
+from typing import Callable, List, Optional
 
 import neptune
 import pandas as pd
-from hyperopt import fmin, hp, tpe
+from hyperopt import fmin, tpe
 from neptune.types import File
+from sklearn.base import BaseEstimator
 from sklearn.metrics import (
     accuracy_score,
     mean_absolute_error,
@@ -27,26 +29,29 @@ from src.plotting_utils import plot_feature_importance, scatter_residual_analysi
 SCRIPT_PATH = str(Path(os.path.realpath(__file__)))
 
 
-def objective(params: dict, X_train, y_train, X_test, y_test, model_class) -> float:
-    """Objective function for hyperopt to minimize."""
-    model = model_class(**params, random_state=RANDOM_STATE)
-    model.fit(X_train, y_train)
-    y_pred = model.predict(X_test)
-    accuracy = accuracy_score(y_test, y_pred)
-    return -accuracy
+def log_performance(run, path, y_pred, y_test):
+    run[f'metrics/{path}/rmse'] = mean_squared_error(
+        y_test,
+        y_pred,
+        squared=False,
+    )
+    run[f'metrics/{path}/mae'] = mean_absolute_error(y_test, y_pred)
+    run[f'metrics/{path}/r2'] = r2_score(y_test, y_pred)
+    run[f'metrics/{path}/accuracy'] = accuracy_score(y_test, y_pred)
 
 
 def run_experiment(
     *,
-    data,
-    experiment_name,
-    space,
-    objective,
-    max_evals,
-    model_class,
-    tags=None,
-    params=None,
-):
+    data: pd.DataFrame,
+    experiment_name: str,
+    space: Optional[dict],
+    objective: Callable,
+    max_evals: int,
+    model_class: BaseEstimator,
+    config_path: str,
+    tags: Optional[List[str]] = None,
+    params: Optional[dict] = None,
+) -> None:
     """Run an experiment using the given data and hyperparameters."""
     if space and params:
         raise ValueError('You cannot provide both space and params.')
@@ -91,8 +96,11 @@ def run_experiment(
     logging.info('Logging information to Neptune..')
     # Experiment metadata
     run['hyperparameters'] = params
-    run['hyperopt/max_evals'] = max_evals
-    run['hyperopt/space'] = space
+
+    # Hyperopt
+    if space:
+        run['hyperopt/max_evals'] = max_evals
+        run['hyperopt/space'] = space
 
     # Performance metrics
     log_performance(run, 'train', y_train_pred, y_train)
@@ -106,14 +114,7 @@ def run_experiment(
     # Artifacts
     run['artifacts/model'].upload(File.as_pickle(model))
     run['code/experiment_code'] = File(SCRIPT_PATH)
+    run['code/config'] = File(config_path)
 
-
-def log_performance(run, path, y_pred, y_test):
-    run[f'metrics/{path}/rmse'] = mean_squared_error(
-        y_test,
-        y_pred,
-        squared=False,
-    )
-    run[f'metrics/{path}/mae'] = mean_absolute_error(y_test, y_pred)
-    run[f'metrics/{path}/r2'] = r2_score(y_test, y_pred)
-    run[f'metrics/{path}/accuracy'] = accuracy_score(y_test, y_pred)
+    # Misc
+    run['misc/experiment_name'] = experiment_name
