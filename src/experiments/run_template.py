@@ -1,0 +1,119 @@
+import logging
+import os
+from pathlib import Path
+
+import neptune
+import pandas as pd
+from hyperopt import fmin, hp, tpe
+from neptune.types import File
+from sklearn.metrics import (
+    accuracy_score,
+    mean_absolute_error,
+    mean_squared_error,
+    r2_score,
+)
+from sklearn.model_selection import cross_val_predict, train_test_split
+
+from config.constants import (
+    N_FOLDS,
+    NEPTUNE_API_TOKEN,
+    NEPTUNE_PROJECT_NAME,
+    RANDOM_STATE,
+    TARGET,
+    TEST_SIZE,
+)
+from src.plotting_utils import plot_feature_importance, scatter_residual_analysis
+
+SCRIPT_PATH = str(Path(os.path.realpath(__file__)))
+
+
+def objective(params: dict, X_train, y_train, X_test, y_test, model_class) -> float:
+    """Objective function for hyperopt to minimize."""
+    model = model_class(**params, random_state=RANDOM_STATE)
+    model.fit(X_train, y_train)
+    y_pred = model.predict(X_test)
+    accuracy = accuracy_score(y_test, y_pred)
+    return -accuracy
+
+
+def run_experiment(
+    *,
+    data,
+    experiment_name,
+    space,
+    objective,
+    max_evals,
+    model_class,
+    tags=None,
+    params=None,
+):
+    """Run an experiment using the given data and hyperparameters."""
+    if space and params:
+        raise ValueError('You cannot provide both space and params.')
+
+    run = neptune.init_run(
+        project=NEPTUNE_PROJECT_NAME,
+        api_token=NEPTUNE_API_TOKEN,
+        name=experiment_name,
+        tags=tags,
+    )
+
+    X, y = data.drop(TARGET, axis=1), data[TARGET]
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, random_state=RANDOM_STATE, test_size=TEST_SIZE
+    )
+
+    if space:
+        params = fmin(
+            fn=lambda params: objective(
+                params, X_train, y_train, X_test, y_test, model_class, run
+            ),
+            space=space,
+            algo=tpe.suggest,
+            max_evals=max_evals,
+        )
+
+    model = model_class(**params)
+
+    logging.info('Fitting model..')
+    model.fit(X_train, y_train)
+
+    y_train_pred = model.predict(X_train)
+    y_test_pred = model.predict(X_test)
+
+    logging.info('Cross-validating model..')
+    data[f'predicted_{TARGET}'] = cross_val_predict(model, X, y, cv=N_FOLDS, n_jobs=-1)
+
+    logging.info('Creating visuals for analysis..')
+    residual_analysis_fig = scatter_residual_analysis(data)
+    feature_importance_fig = plot_feature_importance(model)
+
+    logging.info('Logging information to Neptune..')
+    # Experiment metadata
+    run['hyperparameters'] = params
+    run['hyperopt/max_evals'] = max_evals
+    run['hyperopt/space'] = space
+
+    # Performance metrics
+    log_performance(run, 'train', y_train_pred, y_train)
+    log_performance(run, 'test', y_test_pred, y_test)
+    log_performance(run, 'cv', data[f'predicted_{TARGET}'], data[TARGET])
+
+    # Visuals
+    run['visuals/error_analysis'].upload(residual_analysis_fig)
+    run['visuals/feature_importance'].upload(feature_importance_fig)
+
+    # Artifacts
+    run['artifacts/model'].upload(File.as_pickle(model))
+    run['code/experiment_code'] = File(SCRIPT_PATH)
+
+
+def log_performance(run, path, y_pred, y_test):
+    run[f'metrics/{path}/rmse'] = mean_squared_error(
+        y_test,
+        y_pred,
+        squared=False,
+    )
+    run[f'metrics/{path}/mae'] = mean_absolute_error(y_test, y_pred)
+    run[f'metrics/{path}/r2'] = r2_score(y_test, y_pred)
+    run[f'metrics/{path}/accuracy'] = accuracy_score(y_test, y_pred)

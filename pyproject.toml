@@ -34,7 +34,7 @@ pre-commit = '^3.3.3'
 
 [tool.ruff]
 # Read more: 'https://beta.ruff.rs/docs/rules/'
-ignore = ['D104', 'D100', 'D103', 'G004', 'N999', 'I001', 'N806', 'COM812', 'ERA001']
+ignore = ['D104', 'D100', 'D103', 'G004', 'N999', 'I001', 'N806', 'COM812', 'ERA001', 'N803', 'D210']
 select = [
     'B',   # flake8-bugbear
     'C4',  # flake8-comprehensions
