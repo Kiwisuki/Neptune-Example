@@ -86,8 +86,13 @@ def run_experiment(
     y_train_pred = model.predict(X_train)
     y_test_pred = model.predict(X_test)
 
+    # Rounding and casting to int to be compatible with classification metrics
+    y_train_pred = y_train_pred.round().astype(int)
+    y_test_pred = y_test_pred.round().astype(int)
+
     logging.info('Cross-validating model..')
     data[f'predicted_{TARGET}'] = cross_val_predict(model, X, y, cv=N_FOLDS, n_jobs=-1)
+    data[f'predicted_{TARGET}'] = data[f'predicted_{TARGET}'].round().astype(int)
 
     logging.info('Creating visuals for analysis..')
     residual_analysis_fig = scatter_residual_analysis(data)
@@ -118,3 +123,4 @@ def run_experiment(
 
     # Misc
     run['misc/experiment_name'] = experiment_name
+    run['code/base_model'] = str(model_class)

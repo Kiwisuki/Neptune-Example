@@ -1,14 +1,14 @@
 """ Experiment configuration for XGBoost classifier baseline. """
 from pathlib import Path
 
-from xgboost import XGBClassifier
+from xgboost import XGBRegressor
 
 SCRIPT_PATH = str(Path.resolve(Path(__file__)))
 
-EXPERIMENT_NAME = 'xgboost-classifier-baseline'
+EXPERIMENT_NAME = 'xgboost-regressor-baseline'
 MAX_EVALS = 50
-MODEL_CLASS = XGBClassifier
-TAGS = ['xgboost', 'classifier', 'baseline']
+MODEL_CLASS = XGBRegressor
+TAGS = ['xgboost', 'regressor', 'baseline']
 PARAMS = {'verbosity': 0}
 
 EXPERIMENT_CONFIG = {

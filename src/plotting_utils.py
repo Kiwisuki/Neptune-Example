@@ -42,7 +42,7 @@ def scatter_residual_analysis(data: pd.DataFrame) -> go.Figure:
 
 def plot_feature_importance(model: Union[XGBRegressor, XGBClassifier]) -> plt.Figure:
     """Plots feature importance for a given (xgb)model."""
-    fig, ax = plt.subplots(figsize=(15, 15))
+    fig, ax = plt.subplots(figsize=(15, 8))
     plot_importance(model, ax=ax)
     fig.set_dpi(400)
     return fig
