@@ -30,7 +30,9 @@ from src.plotting_utils import plot_feature_importance, scatter_residual_analysi
 SCRIPT_PATH = str(Path(os.path.realpath(__file__)))
 
 
-def log_performance(run: Type[Run], path: str, y_pred: pd.Series, y_test: pd.Series) -> None:
+def log_performance(
+    run: Type[Run], path: str, y_pred: pd.Series, y_test: pd.Series
+) -> None:
     run[f'metrics/{path}/rmse'] = mean_squared_error(
         y_test,
         y_pred,
@@ -125,3 +127,6 @@ def run_experiment(
     # Misc
     run['misc/experiment_name'] = experiment_name
     run['code/base_model'] = str(model_class)
+
+    logging.info('Experiment finished.')
+    run.stop()

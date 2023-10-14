@@ -1,3 +1,4 @@
+import copy
 import logging
 import warnings
 
@@ -29,7 +30,7 @@ if __name__ == '__main__':
     data = get_data()
     # Adjust target column so it starts from 0
     data[TARGET] = data[TARGET] - ADJUST_CONSTANT
-    run_experiment(data=data, **XGB_HYPER_CONFIG)
-    run_experiment(data=data, **XGB_BASE_CONFIG)
-    run_experiment(data=data, **XGB_REGRESSOR_BASE_CONFIG)
-    run_experiment(data=data, **XGB_REGRESSOR_HYPER_CONFIG)
+    run_experiment(data=copy.deepcopy(data), **XGB_HYPER_CONFIG)
+    run_experiment(data=copy.deepcopy(data), **XGB_BASE_CONFIG)
+    run_experiment(data=copy.deepcopy(data), **XGB_REGRESSOR_BASE_CONFIG)
+    run_experiment(data=copy.deepcopy(data), **XGB_REGRESSOR_HYPER_CONFIG)
